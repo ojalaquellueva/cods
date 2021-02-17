@@ -9,165 +9,66 @@ code_version text DEFAULT NULL,
 build_date date
 );
 
-DROP TABLE IF EXISTS centroid_country;
-CREATE TABLE centroid_country (
-id bigserial not null primary key,
-gid_0 text,
+DROP TABLE IF EXISTS institution;
+CREATE TABLE institution (
+id bigserial primary key,
+institution_code text,
+institution_name text,
+institution_type text,
 country text,
-geom geometry(Geometry,4326),
-geog geography,
-centroid geometry(Point,4326),
-centroid_pos geometry(Point,4326),
-centroid_bb geometry(Point,4326),
-centroid_main geometry(Point,4326),
-centroid_main_pos geometry(Point,4326),
-centroid_main_bb geometry(Point,4326),
-cent_dist_max numeric DEFAULT NULL,
-cent_pos_dist_max numeric DEFAULT NULL,
-cent_bb_dist_max numeric DEFAULT NULL,
-cent_main_dist_max numeric DEFAULT NULL,
-cent_main_pos_dist_max numeric DEFAULT NULL,
-cent_main_bb_dist_max numeric DEFAULT NULL
-);
-
-DROP TABLE IF EXISTS centroid_subpoly;
-CREATE TABLE centroid_subpoly (
-id bigserial not null primary key,
-gid_0 text,
-country text,
-geom geometry(Geometry,4326),
-geog geography,
-centroid geometry(Point,4326),
-centroid_pos geometry(Point,4326),
-centroid_bb geometry(Point,4326),
-cent_dist_max numeric DEFAULT NULL,
-cent_pos_dist_max numeric DEFAULT NULL,
-cent_bb_dist_max numeric DEFAULT NULL
-);
-
-DROP TABLE IF EXISTS centroid_state_province;
-CREATE TABLE centroid_state_province (
-id bigserial not null primary key,
-gid_0 text,
-country text,
-gid_1 text,
 state_province text,
-geom geometry(Geometry,4326),
-geog geography,
-centroid geometry(Point,4326),
-centroid_pos geometry(Point,4326),
-centroid_bb geometry(Point,4326),
-centroid_main geometry(Point,4326),
-centroid_main_pos geometry(Point,4326),
-centroid_main_bb geometry(Point,4326),
-cent_dist_max numeric DEFAULT NULL,
-cent_pos_dist_max numeric DEFAULT NULL,
-cent_bb_dist_max numeric DEFAULT NULL,
-cent_main_dist_max numeric DEFAULT NULL,
-cent_main_pos_dist_max numeric DEFAULT NULL,
-cent_main_bb_dist_max numeric DEFAULT NULL
+latitude double precision,
+longitude double precision
 );
-
-DROP TABLE IF EXISTS centroid_county_parish;
-CREATE TABLE centroid_county_parish (
-id bigserial not null primary key,
-gid_0 text,
-country text,
-gid_1 text,
-state_province text,
-gid_2 text,
-county_parish text,
-geom geometry(Geometry,4326),
-geog geography,
-centroid geometry(Point,4326),
-centroid_pos geometry(Point,4326),
-centroid_bb geometry(Point,4326),
-centroid_main geometry(Point,4326),
-centroid_main_pos geometry(Point,4326),
-centroid_main_bb geometry(Point,4326),
-cent_dist_max numeric DEFAULT NULL,
-cent_pos_dist_max numeric DEFAULT NULL,
-cent_bb_dist_max numeric DEFAULT NULL,
-cent_main_dist_max numeric DEFAULT NULL,
-cent_main_pos_dist_max numeric DEFAULT NULL,
-cent_main_bb_dist_max numeric DEFAULT NULL
-);
-
-DROP TABLE IF EXISTS user_data_raw;
-CREATE TABLE user_data_raw (
-job text DEFAULT NULL,
-latitude text DEFAULT NULL,
-longitude text DEFAULT NULL,
-user_id text DEFAULT NULL
-);
-
--- Remove testing columns when done
-DROP TABLE IF EXISTS user_data;
-CREATE TABLE user_data (
-id BIGSERIAL NOT NULL PRIMARY KEY,
-job text DEFAULT NULL,
-date_created TIMESTAMP WITH TIME ZONE,
-latitude_verbatim text DEFAULT NULL,
-longitude_verbatim text DEFAULT NULL,
-latitude numeric DEFAULT NULL,
-longitude numeric DEFAULT NULL,
-user_id text DEFAULT NULL,
-gid_0 text DEFAULT NULL,
-country text DEFAULT NULL,
-gid_1 text DEFAULT NULL,
-state text DEFAULT NULL,
-gid_2 text DEFAULT NULL,
-county text DEFAULT NULL,
-country_cent_dist numeric DEFAULT NULL,
-country_cent_dist_relative numeric DEFAULT NULL,
-country_cent_type text DEFAULT NULL,
-country_cent_dist_max numeric DEFAULT NULL,
-is_country_centroid smallint DEFAULT NULL, 
-state_cent_dist numeric DEFAULT NULL,
-state_cent_dist_relative numeric DEFAULT NULL,
-state_cent_type text DEFAULT NULL,
-state_cent_dist_max numeric DEFAULT NULL,
-is_state_centroid smallint DEFAULT NULL, 
-county_cent_dist numeric DEFAULT NULL,
-county_cent_dist_relative numeric DEFAULT NULL,
-county_cent_type text DEFAULT NULL,
-county_cent_dist_max numeric DEFAULT NULL,
-is_county_centroid smallint DEFAULT NULL, 
-subpoly_cent_dist numeric DEFAULT NULL,
-subpoly_cent_dist_relative numeric DEFAULT NULL,
-subpoly_cent_type text DEFAULT NULL,
-subpoly_cent_dist_max numeric DEFAULT NULL,
-is_subpoly_centroid smallint DEFAULT NULL, 
-centroid_dist_km numeric DEFAULT NULL,
-centroid_dist_relative numeric DEFAULT NULL,
-centroid_type text DEFAULT NULL,
-centroid_dist_max_km numeric DEFAULT NULL,
-centroid_poldiv text DEFAULT NULL,
-max_dist integer DEFAULT NULL,
-max_dist_rel numeric DEFAULT NULL,
-latlong_err text DEFAULT NULL,
-coordinate_decimal_places smallint DEFAULT NULL,
-coordinate_inherent_uncertainty_m numeric DEFAULT NULL,
-geog GEOGRAPHY(Point)
-) 
-;
--- Add the wgs84 point geometry column, including constraints
+-- Add the wgs84 point geometry column with constraints
 -- See: https://postgis.net/docs/AddGeometryColumn.html
 -- Also: https://gis.stackexchange.com/questions/8699/creating-spatial-tables-with-postgis
-SELECT AddGeometryColumn ('public','user_data','geom',4326,'POINT',2, false);
+SELECT AddGeometryColumn ('public','institution','geom',4326,'POINT',2, false);
+
+-- Proximity user data
+-- Will be used at template for job-specific proximity user data tables
+DROP TABLE IF EXISTS user_data_prox;
+CREATE TABLE user_data_prox (
+id serial primary key,
+job text DEFAULT NULL,
+user_id text DEFAULT NULL,
+country_verbatim text,
+state_province_verbatim text,
+country text,
+state_province text,
+latitude text DEFAULT NULL,
+longitude text DEFAULT NULL,
+is_cultivated_observation smallint,
+is_cultivated_observation_reason text,
+date_created timestamp not null default now(),
+done smallint default 0
+);
+-- Add the wgs84 point geometry column with constraints
+SELECT AddGeometryColumn ('public','user_data_prox','geom',4326,'POINT',2, false);
+
+-- Keyword user data table
+-- Also used as template for job-specific keyword user data tables
+DROP TABLE IF EXISTS user_data_keyword;
+CREATE TABLE user_data_keyword (
+id serial primary key,
+job text DEFAULT NULL,
+user_id text DEFAULT NULL,
+description text DEFAULT NULL,
+is_cultivated_observation smallint,
+is_cultivated_observation_reason text,
+date_created timestamp not null default now(),
+done smallint default 0
+);
 
 --
 -- Add indexes
 --
 
-
 -- Non-spatial indexes
-CREATE INDEX user_data_job_idx ON user_data USING btree (job);
-CREATE INDEX user_data_gid_0_idx ON user_data USING btree (gid_0);
-CREATE INDEX user_data_gid_1_idx ON user_data USING btree (gid_1);
-CREATE INDEX user_data_gid_2_idx ON user_data USING btree (gid_2);
-CREATE INDEX user_data_date_created_idx ON user_data USING btree (date_created);
+CREATE INDEX user_data_prox_job_idx ON user_data_prox USING btree (job);
+CREATE INDEX user_data_prox_country_idx ON user_data_prox USING btree (country);
+CREATE INDEX user_data_prox_state_province_idx ON user_data_prox USING btree (state_province);
+CREATE INDEX user_data_prox_done_idx ON user_data_prox USING btree (done);
 
 -- Spatial index
-CREATE INDEX user_data_geom_idx ON user_data USING GIST (geom);
-CREATE INDEX user_data_geog_idx ON user_data USING GIST (geog);
+CREATE INDEX user_data_prox_geom_idx ON user_data_prox USING GIST (geom);

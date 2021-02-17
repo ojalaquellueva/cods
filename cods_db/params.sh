@@ -11,6 +11,17 @@ DB_POLDIV="gnrs"		# Source db for world geom table
 BASEDIR="/home/boyle/bien/cods"
 APPNAME="CODS"
 
+
+# Remove raw institution tables when done?
+DROP_RAW='t'
+
+# Tables to drop
+# Only dropped if DROP_RAW='t'
+RAW_TBLS="
+ih
+"
+
+
 # Path to db_config.sh
 # For production, keep outside app working directory & supply
 # absolute path
