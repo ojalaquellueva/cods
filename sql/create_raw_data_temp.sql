@@ -1,15 +1,11 @@
 -- ----------------------------------------------------------
--- Create temporary raw user data
+-- Create raw user data table
 --
 -- Requires parameter:
---	$raw_data_tbl_temp --> :raw_data_tbl_temp (job-specific temp table)
+--	$tbl_user_data_raw --> :tbl_user_data_raw (job-specific temp table)
 -- ----------------------------------------------------------
 
 -- Create job-specific raw data table
-DROP TABLE IF EXISTS :raw_data_tbl_temp;
-CREATE TABLE :raw_data_tbl_temp (
-latitude text DEFAULT NULL,
-longitude text DEFAULT NULL,
-user_id text DEFAULT NULL
-)
-;
+DROP TABLE IF EXISTS :tbl_user_data_raw;
+CREATE TABLE :tbl_user_data_raw (LIKE user_data_prox INCLUDING ALL);
+

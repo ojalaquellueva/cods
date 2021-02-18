@@ -5,36 +5,14 @@
 # Check and change as needed
 ##############################################################
 
-######################################
-# is_centroid thresholds
-#
-# Country, state and county canditate 
-# centroids must surpass these thresholds 
-# to qualify as a "true" centroid
-# (is_centroid=1)
-##########################
-
-# Maximum distance (km) to true political division centroid
-MAX_DIST=1000
-
-# Maximum relative distance
-# Proportion of actual distance to true centroid
-# divided by maximum possible distance (from farthest
-# point on political division perimiter to true centroid)
-MAX_DIST_REL=0.002
-
-# Complete clear all data from table user_data
-# For development only
-# Any value other than true, does nothing
-# TURN OFF DURING PRODUCTION!
-CLEAR_USER_DATA="false"
-
 ##########################
 # Paths, adjust according  
 # to your installation
 ##########################
 
-BASEDIR="/home/boyle/bien/cds2"
+# Application base directory (=parent of repo directory src/)
+# Critical! Most other paths depend on this parameter
+BASEDIR="/home/boyle/bien/cods"
 
 # Path to db_config.sh
 # For production, keep outside app directory & supply absolute path
@@ -58,9 +36,34 @@ data_dir_local_abs="${BASEDIR}/data"
 # For backward-compatibility
 data_dir_local=$data_dir_local_abs
 
+######################################
+# Distance threshold
+#
+# Set maximum radius for biodiversity 
+# institution threshold, within which
+# an observation is labelled potentially
+# cultivated
+######################################
+
+# Maximum distance (km) to institution centroid
+DIST_THRESHOLD=3
+
 #############################################################
 # Normally shouldn't have to change remaining parameters
 #############################################################
+
+##########################
+# Clean-up parameters
+##########################
+
+# Clear all data from main user_data table
+# For development only
+# Any value other than true, does nothing
+# TURN OFF DURING PRODUCTION!
+CLEAR_USER_DATA="false"
+
+# Drop temporary user data table when done
+DROP_USER_DATA_TEMP="true"
 
 ##########################
 # Default input/output file names
@@ -69,10 +72,18 @@ data_dir_local=$data_dir_local_abs
 # Default name of the raw data file to be imported. 
 # This name will be used if no file name supplied as command line
 # parameter. Must be located in the user_data directory
-submitted_filename="cds_submitted.csv" 
+# submitted_filename="cods_submitted.csv" 
 
 # Default name of results file
-results_filename="cds_results.csv"
+# results_filename="cods_results.csv"
+
+##########################
+# Import parameters
+##########################
+
+# Set = to 'HEADER' if file has header, otherwise empty string ("")
+# Make this option command line parameter as well
+HEADER="HEADER"
 
 ##########################
 # Input subsample parameters
@@ -94,7 +105,7 @@ email="bboyle@email.arizona.edu"
 
 # Short name for this operation, for screen echo and 
 # notification emails. Number suffix matches script suffix
-pname="CDS"
+pname="CODS"
 pname_local=$pname
 
 # General process name prefix for email notifications

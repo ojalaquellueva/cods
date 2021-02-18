@@ -1,23 +1,22 @@
 #!/bin/bash
 
 #########################################################################
-# Centroid Detection Service (CDS) core application
+# Cultivated Observation Detection Service (CODS) batch application
 #  
 # Purpose: Flags coordinates that are potential political division centroids 
 #
-# Usage: ./cds.sh
+# Usage: ./cods.sh
 #
 # Requirements: 
-# 	1. Table gadm in database gadm, with political division names
-#		standardized using GNRS
-#	2. Database & service gnrs (used to standardize table gadm)
-#	3. Database geonames (used to build database gnrs)
+# 	1. Table ih in db.schema vegbien.analytical_db
+#		* this is temporary requirement until script direct import
 #
 # Authors: Brad Boyle (bboyle@email.arizona.edu)
 #########################################################################
 
 : <<'COMMENT_BLOCK_x'
 COMMENT_BLOCK_x
+#echo "EXITING script `basename "$BASH_SOURCE"`"; exit 0
 
 ######################################################
 # Set basic parameters, functions and options
@@ -26,10 +25,8 @@ COMMENT_BLOCK_x
 # Enable the following for strict debugging only:
 #set -e
 
-# Pointless command to trigger sudo password request. 
-# Should remain in effect for all sudo commands in this 
-# script, regardless of sudo timeout
-#sudo pwd >/dev/null
+# Trigger sudo password request. 
+sudo pwd >/dev/null
 
 # The name of this file. Tells sourced scripts not to reload general  
 # parameters and command line options as they are being called by  
@@ -88,7 +85,6 @@ opt_user=""			# Omit if not an api call
 # Optional threshold parameters
 # Empty string: use default values supplied in params.sh
 maxdist=""
-maxdistrel=""
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -102,9 +98,6 @@ while [ "$1" != "" ]; do
                                 ;;
         -d | --maxdist )       	shift
                                 maxdist=$1
-                                ;;
-        -r | --maxdistrel )    	shift
-                                maxdistrel=$1
                                 ;;
         -n | --nowarnings )		i="false"
         						;;
@@ -164,23 +157,14 @@ else
 fi
 
 # Reset threshold parameter MAX_DIST if supplied
+# Assume default to start (from params file)
+dist_threshold=$DIST_THRESHOLD
 if [[ ! "$maxdist" == "" ]]; then
 	# Check positive integer
 	if test "$maxdist" -gt 0 2> /dev/null ; then
-		MAX_DIST=$maxdist
+		dist_threshold=$maxdist
 	else
-		echo "ERROR: Option -d/--maxdist must be a positive inteter"
-		exit 1
-	fi
-fi
-
-# Reset threshold parameter MAX_DIST_REL if supplied
-if [[ ! "$maxdistrel" == "" ]]; then
-	# Check over (0:1)
-	if (( $(echo "$maxdistrel > 0" |bc -l) )) && (( $(echo "$maxdistrel < 1" |bc -l) )); then
-			MAX_DIST_REL=$maxdistrel
-	else
-		echo "ERROR1: Option -r/--maxdistrel must be fraction over (0:1)"
+		echo "ERROR: Option -d/--maxdist must be a positive integer"
 		exit 1
 	fi
 fi
@@ -220,8 +204,7 @@ if [ "$i" == "true" ]; then
 	Current user:		$curr_user
 	Input file:		$infile
 	Output file:		$outfile
-	MAX_DIST:		$MAX_DIST
-	MAX_DIST_REL:		$MAX_DIST_REL
+	Distance threshold:	$dist_threshold
 
 EOF
 	)"		
@@ -247,9 +230,27 @@ fi
 # Main
 #########################################################################
 
-# Generate unique job ID
-# Date in nanoseconds plus random integer for good measure
-job="job_$(date +%Y%m%d_%H%M%N)_${RANDOM}"	
+# Generate unique suffix by concatenating date in nanoseconds
+# plus random integer for good measure
+uniqid="$(date +%Y%m%d_%H%M%N)_${RANDOM}"	
+
+# For testing only: all temp user data table have same name 
+# so I don't have to delete a ton of tables
+#uniqid="temp"
+
+# Create uniquely names user data tables and job_id
+tbl_user_data="user_data_prox_${uniqid}"
+tbl_user_data_raw="${tbl_user_data}_raw"
+job="job_${uniqid}"	
+
+# echo "tbl_user_data=${tbl_user_data}"
+# echo "tbl_user_data_raw=${tbl_user_data_raw}"
+# echo "job=${job}"
+# echo "db_config_path=${db_config_path}"
+# echo "includes_dir=${includes_dir}"
+# echo "DB=${DB}"
+# echo "opt_pgpassword=${opt_pgpassword}"
+# echo "opt_user=${opt_user}"
 
 ############################################
 # Load raw data to table user_data
@@ -258,110 +259,38 @@ job="job_$(date +%Y%m%d_%H%M%N)_${RANDOM}"
 # Import the input file
 echoi $e "Importing user data:"
 
-# Compose name of temporary, job-specific raw data table
-raw_data_tbl_temp="user_data_raw_${job}"
-
 # Create job-specific temp table to hold raw data
-echoi $e -n "- Creating temp table \"$raw_data_tbl_temp\"..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v raw_data_tbl_temp="${raw_data_tbl_temp}" -f $DIR_LOCAL/sql/create_raw_data_temp.sql"
+echoi $e -n "- Creating temp user data table \"$tbl_user_data_raw\"..."
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw="${tbl_user_data_raw}" -f $DIR_LOCAL/sql/create_raw_data_temp.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
 # Import the file to tempoprary raw data table
 # $nullas statement set as optional command line parameter
 echoi $e -n "- Importing raw data to temp table..."
-
-# ///////////////// #
-# NOTE: need option to import user_id
-# ///////////////// #
-metacmd="\COPY $raw_data_tbl_temp(latitude,longitude) FROM '${infile}' DELIMITER ',' CSV $nullas "
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB_CDS --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
+metacmd="\COPY ${tbl_user_data_raw} (country_state_latlong, country, state_province, latitude_verbatim, longitude_verbatim, user_id) FROM '${infile}' DELIMITER ',' CSV $HEADER $nullas "
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
-if [ "$CLEAR_USER_DATA" == "true" ]; then
-	# Admin-level option to completely clear table user_data, for testing
-	# Set in params file
-	echoi $e -n "- Clearing user_data (TESTING ONLY)..."
-	sql="TRUNCATE user_data RESTART IDENTITY"
-	cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB_CDS --set ON_ERROR_STOP=1 -q -c \"$sql\""
-	eval $cmd
-	source "$DIR/includes/check_status.sh"
-fi
-
-# Insert the raw data to user data table
-echoi $e -n "- Inserting raw data to table \"user_data\"..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v raw_data_tbl_temp="$raw_data_tbl_temp" -f $DIR_LOCAL/sql/load_user_data.sql"
+# Validating geocoordinates
+echoi $e -n "- Validating geocoordinates..."
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw=${tbl_user_data_raw} -f $DIR_LOCAL/sql/validate_latlong.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
-# Drop the temp table
-echoi $e -n "- Dropping temp table..."
-sql="DROP TABLE $raw_data_tbl_temp"
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB_CDS --set ON_ERROR_STOP=1 -q -c \"$sql\""
+# Populate spatial column
+echoi $e -n "- Populating geom..."
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw=${tbl_user_data_raw} -f $DIR_LOCAL/sql/populate_geom.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
 ############################################
-# Validate coordinates
+# Calculate proximity and flag records
 ############################################
 
-echoi $e -n "Validating coordinates..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -f $DIR_LOCAL/sql/validate_coordinates.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-echoi $e -n "Calculating coordinate uncertainty..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -f $DIR_LOCAL/sql/coordinate_uncertainty.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-############################################
-# Populate political divisions
-############################################
-
-echoi $e -n "Populating political divisions..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -f $DIR_LOCAL/sql/populate_poldivs.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-############################################
-# Check centroids
-############################################
-
-echoi $e "Calculating centroids:"
-
-echoi $e -n "- country..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v MAX_DIST=$MAX_DIST -v MAX_DIST_REL=$MAX_DIST_REL -f $DIR_LOCAL/sql/check_centroid_country.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-echoi $e -n "- state..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v MAX_DIST=$MAX_DIST -v MAX_DIST_REL=$MAX_DIST_REL -f $DIR_LOCAL/sql/check_centroid_state.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-echoi $e -n "- county..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v MAX_DIST=$MAX_DIST -v MAX_DIST_REL=$MAX_DIST_REL -f $DIR_LOCAL/sql/check_centroid_county.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-echoi $e -n "- other subpolygons..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v MAX_DIST=$MAX_DIST -v MAX_DIST_REL=$MAX_DIST_REL -f $DIR_LOCAL/sql/check_centroid_subpoly.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-echoi $e -n "Determining consensus centroid..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -f $DIR_LOCAL/sql/consensus_centroid.sql"
-eval $cmd
-source "$DIR/includes/check_status.sh"
-
-############################################
-# Save threshold parameters
-############################################
-
-echoi $e -n "Saving threshold parameters..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB_CDS --set ON_ERROR_STOP=1 -q -v job=$job -v MAX_DIST=$MAX_DIST -v MAX_DIST_REL=$MAX_DIST_REL -f $DIR_LOCAL/sql/save_params.sql"
+echoi $e -n "Calculating proximity to biodiversity institutions..."
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw=${tbl_user_data_raw} -v dist_threshold=${dist_threshold} -f $DIR_LOCAL/sql/mindist.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
@@ -369,17 +298,26 @@ source "$DIR/includes/check_status.sh"
 # Export the results
 ############################################
 
-echoi $e -n "Dumping results to file '$outfile'..."
-metacmd="\COPY ( SELECT id, latitude_verbatim, longitude_verbatim, latitude, longitude, user_id, gid_0, country, gid_1, state, gid_2, county, country_cent_dist, country_cent_dist_relative, country_cent_type, country_cent_dist_max, is_country_centroid, state_cent_dist, state_cent_dist_relative, state_cent_type, state_cent_dist_max, is_state_centroid, county_cent_dist, county_cent_dist_relative, county_cent_type, county_cent_dist_max, is_county_centroid, subpoly_cent_dist, subpoly_cent_dist_relative, subpoly_cent_type, subpoly_cent_dist_max, is_subpoly_centroid, centroid_dist_km, centroid_dist_relative, centroid_type, centroid_dist_max_km, centroid_poldiv, max_dist, max_dist_rel, latlong_err, coordinate_decimal_places, coordinate_inherent_uncertainty_m FROM user_data  WHERE job='"$job"') TO '${outfile}' CSV HEADER"
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB_CDS --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
+echoi $e -n "Exporting results to file '$outfile'..."
+metacmd="\COPY (SELECT id AS cods_id, user_id, country_state_latlong, country, state_province, latitude_verbatim, longitude_verbatim, latitude, longitude, dist_min_km, dist_threshold_km, institution_code, institution_name, is_cultivated_observation, is_cultivated_observation_reason FROM ${tbl_user_data_raw}) TO '${outfile}' CSV HEADER"
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 echoi $i "done"
+
+# Drop the temp user data table if requested
+if [ "$DROP_USER_DATA_TEMP" == "true" ]; then
+	echoi $e -n "- Dropping temporary user data table..."
+	sql="DROP TABLE $tbl_user_data_raw"
+	cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$sql\""
+	eval $cmd
+	source "$DIR/includes/check_status.sh"
+fi
 
 ######################################################
 # Report total elapsed time and exit if running solo
 ######################################################
 
-if [ -z ${master+x} ]; then source "$DIR/includes/finish.sh"; fi
+source "$DIR/includes/finish.sh"
 
 ######################################################
 # End script

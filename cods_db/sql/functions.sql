@@ -2,7 +2,6 @@
 -- Custom functions
 -- -------------------------------------------------------------
 
-
 CREATE OR REPLACE FUNCTION isnumeric(text) RETURNS BOOLEAN AS $$
 DECLARE x NUMERIC;
 BEGIN
