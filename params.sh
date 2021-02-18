@@ -63,7 +63,7 @@ DIST_THRESHOLD=3
 CLEAR_USER_DATA="false"
 
 # Drop temporary user data table when done
-DROP_USER_DATA_TEMP="true"
+DROP_USER_DATA_TEMP="false"
 
 ##########################
 # Default input/output file names
@@ -106,7 +106,9 @@ email="bboyle@email.arizona.edu"
 # Short name for this operation, for screen echo and 
 # notification emails. Number suffix matches script suffix
 pname="CODS"
+pname_key="CODS (keyword search)"
 pname_local=$pname
+pname_local_key=$pname_key
 
 # General process name prefix for email notifications
 pname_header_prefix="BIEN notification: process"

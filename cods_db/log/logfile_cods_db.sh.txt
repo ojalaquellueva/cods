@@ -1,31 +1,30 @@
-Creating database 'cods'...done (.67 sec)
+Creating database 'cods'...done (.61 sec)
 Installing extensions:
 - fuzzystrmatch...done
-- pg_trgm...done
 - unaccent...done
 - postgis...done
-Installing custom functions...done (1.28 sec)
+Installing custom functions...done (1.25 sec)
 Creating core tables...done (.13 sec)
 Importing reference data:
 - Importing table ih from BIEN DB (temp hack!):
--- Exporting dumpfile...done (1.33 sec)
--- Correcting schema references in dumpfile...done (.14 sec)
--- Importing table from dumpfile...done (.23 sec)
+-- Exporting dumpfile...done (1.46 sec)
+-- Correcting schema references in dumpfile...done (.17 sec)
+-- Importing table from dumpfile...done (.27 sec)
 -- Removing dumpfile...done (0 sec)
 Preparing table "institution":
 - Loading table ...done (.13 sec)
 - Populating geometry column...done (.11 sec)
 Dropping raw data tables:
-- ih...done (.19 sec)
+- ih...done (.20 sec)
 Setting ownership and permissions:
 - Setting permissions for admin user 'bien':
--- Changing DB owner to 'bien'done (.18 sec)
+-- Changing DB owner to 'bien'done (.19 sec)
 -- Granting permissions to 'bien'...done (.11 sec)
 -- Transferring ownership of non-postgis relations to user 'bien':
 --- Tables...done (.45 sec)
---- Sequences...done (.35 sec)
---- Views...done (.08 sec)
+--- Sequences...done (.38 sec)
+--- Views...done (.09 sec)
 - Setting permissions for read-only user ''...user not set
 
------- Process 'Build CODS database' completed in 1.22 seconds ------
+------ Process 'Build CODS database' completed in 1.29 seconds ------
 

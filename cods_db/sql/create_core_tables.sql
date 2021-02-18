@@ -53,13 +53,16 @@ SELECT AddGeometryColumn ('public','user_data_prox','geom',4326,'POINT',2, false
 
 -- Keyword user data table
 -- Also used as template for job-specific keyword user data tables
-DROP TABLE IF EXISTS user_data_keyword;
+DROP TABLE IF EXISTS user_data_keyword CASCADE;
 CREATE TABLE user_data_keyword (
 id serial primary key,
 job text DEFAULT NULL,
 user_id text DEFAULT NULL,
+tbl_name text DEFAULT NULL,
+tbl_id text DEFAULT NULL,
 description text DEFAULT NULL,
-is_cultivated_observation smallint,
+description_unaccent text DEFAULT NULL,
+is_cultivated_observation smallint DEFAULT 0,
 is_cultivated_observation_reason text,
 date_created timestamp not null default now(),
 done smallint default 0
@@ -77,5 +80,5 @@ CREATE INDEX user_data_prox_institution_id_idx ON user_data_prox USING btree (in
 CREATE INDEX user_data_prox_geom_idx ON user_data_prox USING GIST (geom);
 
 -- user_data_keyword
-CREATE INDEX user_data_keyword_job_idx ON user_data_keyword USING btree (job);
+-- CREATE INDEX user_data_keyword_job_idx ON user_data_keyword USING btree (job);
 CREATE INDEX user_data_keyword_done_idx ON user_data_keyword USING btree (done);

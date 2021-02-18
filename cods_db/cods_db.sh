@@ -118,15 +118,6 @@ CREATE EXTENSION fuzzystrmatch;
 EOF
 echoi $i "done"
 
-# For trigram fuzzy matching
-echoi $e -n "- pg_trgm..."
-sudo -Hiu postgres PGOPTIONS='--client-min-messages=warning' psql -d $DB -q << EOF
-\set ON_ERROR_STOP on
-DROP EXTENSION IF EXISTS pg_trgm;
-CREATE EXTENSION pg_trgm;
-EOF
-echoi $i "done"
-
 # For generating unaccented versions of text
 echoi $e -n "- unaccent..."
 sudo -Hiu postgres PGOPTIONS='--client-min-messages=warning' psql -d $DB -q << EOF

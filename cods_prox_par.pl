@@ -1,9 +1,10 @@
 #! /usr/bin/perl
 # Previously: bin/env perl
-# controller.pl: Controller for the Centroid Detection Service (CDS).
+# controller.pl: Controller for the Cultivated Observation Detection 
+# Service (CDS).
+# 
 # Author: Naim Matasci <nmatasci@iplantcollaborative.org>
 # Modified by: Brad Boyle <bboyle@email.arizona.edu>
-#
 ###############################################################################
 
 use strict;
@@ -16,7 +17,7 @@ $binpath =~ s/\/?\w+\.?\w*$//;
 if ( !$binpath ) {
 	$binpath = '.';
 }
-my $BINARY          = "$binpath/cds.sh";
+my $BINARY          = "$binpath/cods.sh";
 my $CONSOLIDATE_SCR = "$binpath/consolidator.pl";
 
 # Master directory where all content saved
@@ -25,7 +26,6 @@ my $tmpfoldermaster = "/tmp/cds/";
 my $infile  = '';    # Input file
 my $outfile = '';    # Optput file - optional
 my $maxdist  = '';   # MAX_DIST parameter
-my $maxdistrel  = '';    # MAX_DIST_REL parameter
 my $nbatch  = '';    # Number of batches
 my $mf_opt  = '';    # makeflow options - optional
 my $d = 'c';         # Output file delimiter, currently only 'c' (csv)
@@ -34,7 +34,6 @@ GetOptions(
 	'in=s'      => \$infile,
 	'out:s'     => \$outfile,
 	'md=i'     => \$maxdist,
-	'mdr=f'     => \$maxdistrel,
 	'nbatch=i'  => \$nbatch,
 	'opt:s'     => \$mf_opt
 );
@@ -61,12 +60,6 @@ if ( !$outfile ) {
 my $opt_maxdist = '';	# If omitted will use application default
 if ( !$maxdist=='' ) {
 	$opt_maxdist = "-d $maxdist";
-}
-
-# Set maxdistrel parameter option
-my $opt_maxdistrel = '';	# If omitted will use application default
-if ( !$maxdistrel=='' ) {
-	$opt_maxdistrel = "-r $maxdistrel";
 }
 
 # Let the magic begin
@@ -216,7 +209,7 @@ sub _generate_mfconfig {
 		  "$tmpfolder/out_$i.txt: $tmpfolder/input/in_$i.txt \$APPBIN\n"; 
 		#Line 2: command
 		$operation .=
-"\t\$APPBIN -a -f $tmpfolder/input/in_$i.txt -o $tmpfolder/out_$i.txt $opt_maxdist $opt_maxdistrel \n\n"; 
+"\t\$APPBIN -a -f $tmpfolder/input/in_$i.txt -o $tmpfolder/out_$i.txt $opt_maxdist \n\n"; 
 		$cmd = $cmd . $operation;
 		$filelist .= "$tmpfolder/out_$i.txt ";
 	}

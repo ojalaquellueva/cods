@@ -1,11 +1,13 @@
 #!/bin/bash
 
 #########################################################################
-# Cultivated Observation Detection Service (CODS) batch application
+# Cultivated Observation Detection Service (CODS) batch application, 
+# proximity algotithm
 #  
-# Purpose: Flags coordinates that are potential political division centroids 
+# Purpose: Flags observations as potentially cultivated if they within
+#	threshold distance of herbarium or botanical garden
 #
-# Usage: ./cods.sh
+# Usage: ./cods_prox.sh
 #
 # Requirements: 
 # 	1. Table ih in db.schema vegbien.analytical_db
@@ -306,7 +308,7 @@ echoi $i "done"
 
 # Drop the temp user data table if requested
 if [ "$DROP_USER_DATA_TEMP" == "true" ]; then
-	echoi $e -n "- Dropping temporary user data table..."
+	echoi $e -n "Dropping temporary user data table..."
 	sql="DROP TABLE $tbl_user_data_raw"
 	cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$sql\""
 	eval $cmd
