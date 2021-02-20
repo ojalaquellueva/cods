@@ -3,7 +3,6 @@
 Author: Brad Boyle (bboyle@email.arizona.edu)  
 Date created: 20 Feb. 2021
 
-
 ## Contents
 
 [Overview](#overview)  
