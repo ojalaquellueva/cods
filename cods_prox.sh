@@ -140,7 +140,7 @@ fi
 
 # Output file (optional)
 # If not provided, name output file as inputfile basename plus
-# "_cds_results" and save to same directory
+# "_cods_results" and save to same directory
 if [[ ! "$outfile" == "" ]]; then
 	# Check destination directory exists
 	outdir=$(dirname "${outfile}")
@@ -154,7 +154,7 @@ else
 	filename=$(basename -- "${infile}")
 	ext="${filename##*.}"
 	base="${filename%.*}"
-	outfilename="${base}_cds_results.${ext}"
+	outfilename="${base}_cods_results.${ext}"
 	outfile="${outdir}/${outfilename}"
 fi
 

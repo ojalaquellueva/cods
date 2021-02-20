@@ -3,7 +3,7 @@
 #########################################################################
 # Purpose: Creates and populates CODS database 
 #
-# Usage:	./cds_db.sh
+# Usage:	./cods_db.sh
 #
 # Authors: Brad Boyle (bboyle@email.arizona.edu)
 # Date created: 11 Mar 2020

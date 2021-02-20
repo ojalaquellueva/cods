@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 # Previously: bin/env perl
 # controller.pl: Controller for the Cultivated Observation Detection 
-# Service (CDS).
+# Service (CODS).
 # 
 # Author: Naim Matasci <nmatasci@iplantcollaborative.org>
 # Modified by: Brad Boyle <bboyle@email.arizona.edu>
@@ -11,7 +11,7 @@ use strict;
 use POSIX;
 use Getopt::Long;
 
-my $APPNAME	= "cds";
+my $APPNAME	= "cods";
 my $binpath = $0;
 $binpath =~ s/\/?\w+\.?\w*$//;
 if ( !$binpath ) {
@@ -21,7 +21,7 @@ my $BINARY          = "$binpath/cods.sh";
 my $CONSOLIDATE_SCR = "$binpath/consolidator.pl";
 
 # Master directory where all content saved
-my $tmpfoldermaster = "/tmp/cds/";
+my $tmpfoldermaster = "/tmp/cods/";
 
 my $infile  = '';    # Input file
 my $outfile = '';    # Optput file - optional

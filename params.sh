@@ -20,7 +20,7 @@ BASEDIR="/home/boyle/bien/cods"
 db_config_path="${BASEDIR}/config"
 
 # Relative data directory name
-# CDS will look here inside app directory for user input
+# Application will look here inside app directory for user input
 # and will write results here, unless $data_dir_local_abs
 # is set (next parameter)
 # Omit trailing slash
@@ -31,7 +31,6 @@ data_base_dir="../data"
 # Comment out to use $data_base_dir (relative, above)
 # Omit trailing slash
 data_dir_local_abs="${BASEDIR}/data"
-#data_dir_local_abs="/home/boyle/bien3/repos/cds/data/user_data"
 
 # For backward-compatibility
 data_dir_local=$data_dir_local_abs
