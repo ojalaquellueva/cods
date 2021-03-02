@@ -263,14 +263,14 @@ echoi $e "Importing user data:"
 
 # Create job-specific temp table to hold raw data
 echoi $e -n "- Creating temp user data table \"$tbl_user_data_raw\"..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw="${tbl_user_data_raw}" -f $DIR_LOCAL/sql/create_raw_data_temp.sql"
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw="${tbl_user_data_raw}" -f $DIR_LOCAL/sql/create_raw_data_temp_prox.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 
 # Import the file to tempoprary raw data table
 # $nullas statement set as optional command line parameter
 echoi $e -n "- Importing raw data to temp table..."
-metacmd="\COPY ${tbl_user_data_raw} (country_state_latlong, country, state_province, latitude_verbatim, longitude_verbatim, user_id) FROM '${infile}' DELIMITER ',' CSV $HEADER $nullas "
+metacmd="\COPY ${tbl_user_data_raw} (user_id, latitude_verbatim, longitude_verbatim) FROM '${infile}' DELIMITER ',' CSV $HEADER $nullas "
 cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 source "$DIR/includes/check_status.sh"
@@ -301,7 +301,7 @@ source "$DIR/includes/check_status.sh"
 ############################################
 
 echoi $e -n "Exporting results to file '$outfile'..."
-metacmd="\COPY (SELECT id AS cods_id, user_id, country_state_latlong, country, state_province, latitude_verbatim, longitude_verbatim, latitude, longitude, dist_min_km, dist_threshold_km, institution_code, institution_name, is_cultivated_observation, is_cultivated_observation_reason FROM ${tbl_user_data_raw}) TO '${outfile}' CSV HEADER"
+metacmd="\COPY (SELECT id AS cods_id, user_id, latitude_verbatim, longitude_verbatim, latitude, longitude, dist_min_km, dist_threshold_km, institution_code, institution_name, is_cultivated_observation, is_cultivated_observation_reason FROM ${tbl_user_data_raw}) TO '${outfile}' CSV HEADER"
 cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 echoi $i "done"

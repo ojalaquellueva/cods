@@ -252,7 +252,7 @@ source "$DIR/includes/check_status.sh"
 # Import the file to tempoprary raw data table
 # $nullas statement set as optional command line parameter
 echoi $e -n "- Importing raw data to temp table..."
-metacmd="\COPY ${tbl_user_data_raw} (user_id, tbl_name, tbl_id, description ) FROM '${infile}' DELIMITER ',' CSV $HEADER $nullas "
+metacmd="\COPY ${tbl_user_data_raw} (user_id, description ) FROM '${infile}' DELIMITER ',' CSV $HEADER $nullas "
 cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 source "$DIR/includes/check_status.sh"
@@ -271,7 +271,7 @@ source "$DIR/includes/check_status.sh"
 ############################################
 
 echoi $e -n "Exporting results to file '$outfile'..."
-metacmd="\COPY (SELECT id AS cods_key_id, user_id, tbl_name, tbl_id, description, is_cultivated_observation, is_cultivated_observation_reason FROM ${tbl_user_data_raw}) TO '${outfile}' CSV HEADER"
+metacmd="\COPY (SELECT id AS cods_key_id, user_id, description, is_cultivated_observation, is_cultivated_observation_reason FROM ${tbl_user_data_raw}) TO '${outfile}' CSV HEADER"
 cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user -d $DB --set ON_ERROR_STOP=1 -q -c \"$metacmd\""
 eval $cmd
 echoi $i "done"

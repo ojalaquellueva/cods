@@ -99,7 +99,7 @@ Option | Meaning | Required? | Default value |
 #### Example:
 
 ```
-./cods_prox.sh -f myfile.csv -m joeblow@gmail.com
+./cods_prox.sh -f ../data/cods_prox_testfile.csv -m joeblow@gmail.com
 ```
 
 #### Keyword algorithm
@@ -122,7 +122,7 @@ Option | Meaning | Required? | Default value |
 #### Example:
 
 ```
-./cods_key.sh -f myfile.csv -m joeblow@gmail.com
+./cods_key.sh -f ../data/cods_key_testfile.csv -m joeblow@gmail.com
 ```
 
 <a name="II-cods-parallel"></a>
@@ -149,5 +149,5 @@ Option | Meaning | Required? | Default value |
 #### Example:
 
 ```
-./cods_prox_par.pl -in "data/cods_testfile.csv" -nbatch 3
+./cods_prox_par.pl -in "data/cods_prox_testfile.csv" -nbatch 3
 ```
