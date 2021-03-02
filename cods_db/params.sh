@@ -18,6 +18,7 @@ DROP_RAW='t'
 # Only dropped if DROP_RAW='t'
 RAW_TBLS="
 ih
+bcgi_raw
 "
 
 # Path to db_config.sh
@@ -42,8 +43,12 @@ functions_path="${BASEDIR}/src/includes"
 # forward slash at start).
 # Recommend keeping outside app directory
 # Omit trailing slash
-data_base_dir="${BASEDIR}/data"
+data_base_dir="${BASEDIR}/data/db"
 #data_base_dir="data"		 # Relative path
+
+# Raw data files
+data_raw_bcgi="BCGI_raw_20210225.csv"
+data_raw_ih=""
 
 # Makes user_admin the owner of the db and all objects in db
 # If leave user_admin blank ("") then database will be owned

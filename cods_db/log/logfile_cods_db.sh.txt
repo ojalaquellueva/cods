@@ -1,30 +1,35 @@
-Creating database 'cods'...done (.61 sec)
+Creating database 'cods_dev'...done (.63 sec)
 Installing extensions:
 - fuzzystrmatch...done
 - unaccent...done
 - postgis...done
-Installing custom functions...done (1.25 sec)
+Installing custom functions...done (1.22 sec)
 Creating core tables...done (.13 sec)
 Importing reference data:
-- Importing table ih from BIEN DB (temp hack!):
--- Exporting dumpfile...done (1.46 sec)
--- Correcting schema references in dumpfile...done (.17 sec)
--- Importing table from dumpfile...done (.27 sec)
--- Removing dumpfile...done (0 sec)
+- BCGI:
+-- Creating raw data table...done (.10 sec)
+-- Importing raw data...done (.12 sec)
+- Index Herbariorum:
+-- Importing table ih from BIEN DB (HACK!):
+--- Exporting dumpfile...done (1.47 sec)
+--- Correcting schema references in dumpfile...done (.16 sec)
+--- Importing table from dumpfile...done (.24 sec)
+--- Removing dumpfile...done (.01 sec)
 Preparing table "institution":
-- Loading table ...done (.13 sec)
-- Populating geometry column...done (.11 sec)
+- Loading table ...done (.16 sec)
+- Populating geometry column...done (.15 sec)
 Dropping raw data tables:
-- ih...done (.20 sec)
+- ih...done (.25 sec)
+- bcgi_raw...done (.18 sec)
 Setting ownership and permissions:
 - Setting permissions for admin user 'bien':
--- Changing DB owner to 'bien'done (.19 sec)
--- Granting permissions to 'bien'...done (.11 sec)
+-- Changing DB owner to 'bien'done (.20 sec)
+-- Granting permissions to 'bien'...done (.12 sec)
 -- Transferring ownership of non-postgis relations to user 'bien':
---- Tables...done (.45 sec)
---- Sequences...done (.38 sec)
---- Views...done (.09 sec)
+--- Tables...done (.48 sec)
+--- Sequences...done (.41 sec)
+--- Views...done (.10 sec)
 - Setting permissions for read-only user ''...user not set
 
------- Process 'Build CODS database' completed in 1.29 seconds ------
+------ Process 'Build CODS database' completed in 1.38 seconds ------
 

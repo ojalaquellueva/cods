@@ -292,7 +292,7 @@ source "$DIR/includes/check_status.sh"
 ############################################
 
 echoi $e -n "Calculating proximity to biodiversity institutions..."
-cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw=${tbl_user_data_raw} -v dist_threshold=${dist_threshold} -f $DIR_LOCAL/sql/mindist.sql"
+cmd="$opt_pgpassword PGOPTIONS='--client-min-messages=warning' psql $opt_user  -d $DB --set ON_ERROR_STOP=1 -q -v tbl_user_data_raw=${tbl_user_data_raw} -v tbl_user_data_raw_temp=${tbl_user_data_raw}_temp -v dist_threshold=${dist_threshold} -f $DIR_LOCAL/sql/mindist.sql"
 eval $cmd
 source "$DIR/includes/check_status.sh"
 

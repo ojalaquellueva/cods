@@ -2,7 +2,8 @@
 -- Calculate distance to the nearest biodiversity institution
 --
 -- Requires parameters:
---	$tbl_user_data_raw --> :tbl_user_data_raw batch-specific temp table)
+--	$tbl_user_data_raw --> :tbl_user_data_raw (batch-specific user data table)
+--	${tbl_user_data_raw}_temp --> :tbl_user_data_raw (temp batch-specific table)
 --	$dist_threshold --> :dist_threshold 
 -- ----------------------------------------------------------
 
@@ -41,5 +42,58 @@ WHERE a.institution_id=b.id
 UPDATE :tbl_user_data_raw
 SET dist_threshold_km = :dist_threshold::double precision
 ;
+
+/* UNDER CONSTRUCTION
+-- Concatenate multiple institutions equally-distant to same observation
+ALTER TABLE :tbl_user_data_raw
+RENAME TO :tbl_user_data_raw_temp
+;
+CREATE TABLE :tbl_user_data_raw (LIKE :tbl_user_data_raw_temp INCLUDING ALL);
+
+INSERT INTO :tbl_user_data_raw (
+job,
+user_id,
+country_state_latlong,
+country,
+state_province,
+latitude_verbatim,
+longitude_verbatim,
+latitude,
+longitude,
+dist_min_km,
+dist_threshold_km,
+institution_code,
+institution_name,
+is_cultivated_observation,
+is_cultivated_observation_reason,
+date_created,
+geom
+)
+SELECT DISTINCT ON (
+job,
+user_id,
+country_state_latlong,
+country,
+state_province,
+latitude_verbatim,
+longitude_verbatim,
+latitude,
+longitude,
+dist_min_km,
+dist_threshold_km,
+institution_code,
+institution_name,
+is_cultivated_observation,
+is_cultivated_observation_reason,
+date_created,
+geom
+FROM :tbl_user_data_raw_temp
+
+
+*/
+
+
+
+
 
 

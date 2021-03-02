@@ -53,6 +53,9 @@ data_dir_local=$data_base_dir
 data_dir=$data_base_dir
 DIR_LOCAL=$DIR
 
+# Reset DB name here if desired; otherwise comment out\
+DB="cods_dev"
+
 ######################################################
 # Custom confirmation message. 
 # Will only be displayed if -s (silent) option not used.
@@ -154,28 +157,41 @@ source "$includes_dir/check_status.sh"
 ############################################
 
 echoi $e "Importing reference data:"
-echoi $e "- Importing table ih from BIEN DB (temp hack!):"
+
+echoi $e "- BCGI:"
+echoi $e -n "-- Creating raw data table..."
+PGOPTIONS='--client-min-messages=warning' psql -d $DB --set ON_ERROR_STOP=1 -q -f $DIR/sql/create_bcgi_raw.sql 
+source "$includes_dir/check_status.sh"  
+
+echoi $i -n "-- Importing raw data..."
+sql="\COPY bcgi_raw FROM '${data_base_dir}/${data_raw_bcgi}' DELIMITER ',' CSV HEADER;"
+PGOPTIONS='--client-min-messages=warning' psql $DB --set ON_ERROR_STOP=1 -q -c "$sql"
+source "$includes_dir/check_status.sh"  
+
+echoi $e "- Index Herbariorum:"
+echoi $e "-- Importing table ih from BIEN DB (HACK!):"
 
 # Dump table from source databse
-echoi $e -n "-- Exporting dumpfile..."
+# Temporary hack until finish scripting import from API
+echoi $e -n "--- Exporting dumpfile..."
 dumpfile="/tmp/ih.sql"
 sudo -Hiu postgres pg_dump --no-owner -t "analytical_db.ih" "vegbien" > $dumpfile
 source "$includes_dir/check_status.sh"	
 
 # Correct schema references if $SCH_GEOM<>"public"
 # Will screw up the dumpfile if source schema is already "public"
-echoi $e -n "-- Correcting schema references in dumpfile..."
+echoi $e -n "--- Correcting schema references in dumpfile..."
 sed -i -e "s/analytical_db./public./g" $dumpfile
 sed -i -e "s/Schema: analytical_db;/Schema: public;/g" $dumpfile
 sed -i -e "s/ analytical_db./ public./g" $dumpfile
 source "$includes_dir/check_status.sh"	
 
 # Import table from dumpfile to target db & schema
-echoi $e -n "-- Importing table from dumpfile..."
+echoi $e -n "--- Importing table from dumpfile..."
 PGOPTIONS='--client-min-messages=warning' psql -q --set ON_ERROR_STOP=1 $DB < $dumpfile >/dev/null
 source "$includes_dir/check_status.sh"	
 
-echoi $e -n "-- Removing dumpfile..."
+echoi $e -n "--- Removing dumpfile..."
 rm $dumpfile
 source "$includes_dir/check_status.sh"	
 
