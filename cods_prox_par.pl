@@ -17,7 +17,7 @@ $binpath =~ s/\/?\w+\.?\w*$//;
 if ( !$binpath ) {
 	$binpath = '.';
 }
-my $BINARY          = "$binpath/cods.sh";
+my $BINARY          = "$binpath/cods_prox.sh";
 my $CONSOLIDATE_SCR = "$binpath/consolidator.pl";
 
 # Master directory where all content saved

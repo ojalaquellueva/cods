@@ -174,8 +174,10 @@ fi
 # Set user and password for api access
 # Parameters $USER and $PWD_USER set in config file params.sh
 if  [ "$api" == "true" ]; then
-	opt_pgpassword="PGPASSWORD=$PWD_USER"
-	opt_user="-U $USER"
+# 	opt_pgpassword="PGPASSWORD=$PWD_USER"
+# 	opt_user="-U $USER"
+	opt_pgpassword="PGPASSWORD=$PWD_USER_ADMIN"
+	opt_user="-U $USER_ADMIN"
 	
 	# Turn off all echoes, regardless of echo options sent
 	e="false"
