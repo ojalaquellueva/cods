@@ -9,20 +9,20 @@ process(@ARGV);
 
 sub process {
 	my $tmpfolder = shift;
-	my $d = shift;  #Output file delimiter option
+	my $dout = shift;  # Final output file delimiter option
 	my $mapfile   = "$tmpfolder/map.tab";
 	my $pidfile   = "$tmpfolder/pids.tab";
 	my %map;
 	my %pids;
-	my $delim = '';	#Output file delimiter
 
-	#Set the output file delimiter
-	if ($d eq 't') {
-		$delim = "\t";
-	} elsif ($d eq 'c') {
-		$delim = ',';
+	# Set the output file delimiter
+	my $delim_out = '';	# Literal output file delimiter
+	if ($dout eq 't') {
+		$delim_out = "\t";
+	} elsif ($dout eq 'c') {
+		$delim_out = ',';
 	} else {
-		print "Not a valid delimiter, must be c or t"; exit 1;
+		print "dout='$dout' not a valid delimiter, must be c or t"; exit 1;
 	}
 
 	#Load the mapping of names to internal ids
@@ -59,40 +59,31 @@ sub process {
 	for ( my $i = 0 ; $i < @files ; $i++ ) {
 		my @consolidated;
 		
-		#Load the list of names
+		#Load the output
 		open my $NL, "<$tmpfolder/out_$i.txt"
 		  or die "Cannot open processed names file $tmpfolder/out_$i.txt: $!\n";
-		my @names_list = <$NL>;
+		my @out_list = <$NL>;
 		close $NL;
 		
 		#If a header hasn't been written, create the file and write the header 
 		if ( !$header ) {
-			$header = shift(@names_list);
+			$header = shift(@out_list);
 			open my $OF, ">$tmpfolder/output.csv"
 			  or die "Cannot create output file $tmpfolder/output.csv: $!\n";
 			print $OF "$header";
 			close $OF;
 		}
 		else {
-			shift @names_list; #The first line of every file is the header, so it always needs to be removed
+			shift @out_list; #The first line of every file is the header, so it always needs to be removed
 		}
 		
-		#Go over the list of names
-		for (@names_list) {
+		#Go over the lines of output
+		for (@out_list) {
 			chomp;
 			
-			my @fields = split /$delim/, $_; #split files on delimiter
+			my @fields = split /,/, $_; #split files on delimiter
 			
-			my $id     = "$i." . shift(@fields); #recreates the internal id
-			
-			my $ref    = $map{$id}; #Use the internal id to retrieve the original name
-			if (%pids) {
-				#$ref = $pids{ $map{$id} } . "|$map{$id}"; #and the primary id, if present
-				$ref = $pids{ $map{$id} }; 	#Just the integer ID
-			}
-			
-			#push @consolidated, join "$delim", ( "\"$ref\"", @fields );
-			push @consolidated, join "$delim", ( "$ref", @fields );
+			push @consolidated, join "$delim_out", ( @fields );
 		}
 		
 		#Append the batch of processed names to the output file. 

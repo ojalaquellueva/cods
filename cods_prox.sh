@@ -72,6 +72,7 @@ DIR_LOCAL=$DIR
 # Set defaults
 infile=""	# Input file and path
 outfile=""	# Output file and path
+header="false"	# Assume input file does not have header
 api="false"		# Assume not an api call
 silent="false"	# off; sets both $e and $i to false if true
 i="true"						# Interactive mode on by default
@@ -102,6 +103,8 @@ while [ "$1" != "" ]; do
                                 maxdist=$1
                                 ;;
         -n | --nowarnings )		i="false"
+        						;;
+        -h | --header )			header="true"
         						;;
         -e | --echo )			e="true"
         						;;
@@ -136,6 +139,13 @@ else
 		echo "ERROR: file '$infile' does not exist"
 		exit 1
 	fi
+fi
+
+# Header option for input file
+if [[ "$header" == "false" ]]; then
+	HEADER=""
+else
+	HEADER="HEADER"
 fi
 
 # Output file (optional)

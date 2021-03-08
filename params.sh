@@ -77,14 +77,6 @@ DROP_USER_DATA_TEMP="false"
 # results_filename="cods_results.csv"
 
 ##########################
-# Import parameters
-##########################
-
-# Set = to 'HEADER' if file has header, otherwise empty string ("")
-# Make this option command line parameter as well
-HEADER="HEADER"
-
-##########################
 # Input subsample parameters
 ##########################
 

@@ -23,19 +23,24 @@ my $CONSOLIDATE_SCR = "$binpath/consolidator.pl";
 # Master directory where all content saved
 my $tmpfoldermaster = "/tmp/cods/";
 
-my $infile  = '';    # Input file
-my $outfile = '';    # Optput file - optional
-my $maxdist  = '';   # MAX_DIST parameter
-my $nbatch  = '';    # Number of batches
-my $mf_opt  = '';    # makeflow options - optional
+my $infile  = '';   # Input file
+my $outfile = '';   # Optput file - optional
+my $maxdist  = '';  # MAX_DIST parameter
+my $nbatch  = '';   # Number of batches
+my $hrows  = '';	# Number of header rows; default '' = 0 = none
+my $mf_opt  = '';   # makeflow options - optional
 my $d = 'c';         # Output file delimiter, currently only 'c' (csv)
+my $tmp_outfile = "output.csv";	# Name of output file in tmp directory
 
 GetOptions(
 	'in=s'      => \$infile,
 	'out:s'     => \$outfile,
 	'md=i'     => \$maxdist,
 	'nbatch=i'  => \$nbatch,
-	'opt:s'     => \$mf_opt
+	'hrows=i'  => \$hrows,
+	'opt:s'     => \$mf_opt,
+	'd:s'     => \$d
+	
 );
 
 # The temporary folder needs to be in the /tmp directory 
@@ -56,6 +61,13 @@ if ( !$outfile ) {
 	$outfile =~ s/(?:\.\w+)?$/_${APPNAME}_scrubbed.csv/;    
 }
 
+# Check that header rows is either integer or empty string
+if ( $hrows=='' || $hrows==0 ) {
+	$hrows = 0;
+} elsif ( ! ($hrows =~ /^\d+$/) ) { 
+	die("ERROR: option hrows must be integer >=0!\n");
+}
+
 # Set maxdist parameter option
 my $opt_maxdist = '';	# If omitted will use application default
 if ( !$maxdist=='' ) {
@@ -69,14 +81,20 @@ sub process {
 	my ( $infile, $nbatch, $tmpfolder, $outfile ) = @_;
 
 	# Get the number of records in the input file
+	# Subtract header lines, if any
 	my $nlines = `wc -l < $infile 2>/dev/null`
 	  or die("Cannot find $infile: $!\n");
+	$nlines = $nlines - $hrows;
 
 	if ( $nlines == 0 ) { die("The input file $infile is empty.\n") }
 
 	# Calculate the expected size of the batches, given their number 
 	# and the number of records
 	my $exp_g_size = ceil( $nlines / $nbatch );
+	
+# 	print "\$nlines=$nlines\n";
+# 	print "\$nbatch=$nbatch\n";
+# 	print "\$exp_g_size=$exp_g_size\n";
 
 	# Used to map the original name identifiers to the results.
 	my %map;
@@ -94,8 +112,11 @@ sub process {
 	# Indexer for the name id within a batch
 	my $id = 0;
 
-	# Line tracker
+	# Data line tracker (minus header rows, if any)
 	my $tot = 0;
+	
+	# All lines tracker
+	my $totall = 0;
 
 	# The list of lat/long pairs forming a batch
 	my @batch;
@@ -103,6 +124,11 @@ sub process {
 	open( my $INL, "<$infile" ) or die "Cannot open input file $infile: $!\n";
 
 	while (<$INL>) {
+
+		$totall++;
+		if ( $totall <= $hrows ) {
+			next;
+		}
 
 		$tot++;
 		chomp;
@@ -127,7 +153,7 @@ sub process {
 		}
 
 		if ( exists $map{$coords} && $tot <= $nlines ) { 
-			#We have already seen that name
+			#We have already seen those values
 			next;
 		}
 		
@@ -168,9 +194,7 @@ sub process {
 	print "tmpfolder='$tmpfolder'\n";
 	my $makeflow_cmd="makeflow $mf_opt $tmpfolder/${APPNAME}.flow";
 	print "makeflow_cmd='$makeflow_cmd'\n";
-	
 	system("makeflow $mf_opt $tmpfolder/${APPNAME}.flow"); #Run makeflow
-	
 	#_clean($tmpfolder); #Remove all temporary data
 
 }
@@ -215,12 +239,12 @@ sub _generate_mfconfig {
 	}
 	
 	# Call to the consolidation script
-	#$cmd .= "$tmpfolder/output.csv: $CONSOLIDATE_SCR $tmpfolder $filelist\nLOCAL $CONSOLIDATE_SCR $tmpfolder\n\n";
-	$cmd .= "$tmpfolder/output.csv: $CONSOLIDATE_SCR $tmpfolder $filelist\n $CONSOLIDATE_SCR $tmpfolder $d\n\n";
+	#$cmd .= "$tmpfolder/$tmp_outfile: $CONSOLIDATE_SCR $tmpfolder $filelist\nLOCAL $CONSOLIDATE_SCR $tmpfolder\n\n";
+	$cmd .= "$tmpfolder/$tmp_outfile: $CONSOLIDATE_SCR $tmpfolder $filelist\n $CONSOLIDATE_SCR $tmpfolder $d\n\n";
 
 	# Copy the consolidated output to the final destination
-	#$cmd .= "$outfile: $tmpfolder/output.csv\nLOCAL cp $tmpfolder/output.csv $outfile\n\n";
-	$cmd .= "$outfile: $tmpfolder/output.csv\n cp $tmpfolder/output.csv $outfile\n\n";
+	#$cmd .= "$outfile: $tmpfolder/$tmp_outfile\nLOCAL cp $tmpfolder/$tmp_outfile $outfile\n\n";
+	$cmd .= "$outfile: $tmpfolder/$tmp_outfile\n cp $tmpfolder/$tmp_outfile $outfile\n\n";
 
 	# Write the file to the temporary folder
 	open my $FF, ">$tmpfolder/${APPNAME}.flow"
@@ -248,6 +272,8 @@ sub _write_out {
 	open( my $OF, ">$tmpfolder/in_$batch_id.txt" )
 	  or die("Cannot write output file $tmpfolder/in_$batch_id.txt: $!\n");
 	print $OF join( "\n", @{$batch} );
+	# Add final new line to file
+	print $OF "\n";
 	close $OF;
 }
 
@@ -258,7 +284,6 @@ sub _write_screen {
 	for ( my $i = 0 ; $i < @batch ; $i++ ) {
 		print "$batch_id.$i\t$batch[$i]\n";
 	}
-
 }
 
 #Remove temporary files
